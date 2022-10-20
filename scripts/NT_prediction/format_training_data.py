@@ -73,11 +73,11 @@ for i in presyn_NT.index:
 
     #get world coordinates
     world_coord = np.array(node[['x','y','z']],dtype='float')
-    print('World Co-ordinates:',world_coord)
+    #print('World Co-ordinates:',world_coord)
 
     #get voxel coordinates
     voxel_coord = np.array((world_coord-offset_nm)/resolution_nm,dtype='int')
-    print('Voxel Co-ordinates:',voxel_coord)
+    #print('Voxel Co-ordinates:',voxel_coord)
 
     cube_offsets = (cube_shape/2)//resolution_nm
     cube_i = np.array(voxel_coord - cube_offsets, dtype='int')
@@ -91,6 +91,88 @@ for i in presyn_NT.index:
     cubes.append(sliced)
 
 cubes_meta_data = pd.DataFrame(data=cubes_meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid', 'neurotransmitter'])
+
+print('550nm cubes pulled...')
+
+# format data and save as hdf5
+
+ach_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='cholinergic']
+gaba_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='GABAergic']
+glut_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='glutamatergic']
+
+with h5py.File('data/NT_cubes.hdf5', 'a') as f:
+
+    print('started saving .hdf5 training data...')
+    f.attrs['date'] = '2022-10-20'
+    f.attrs['readme'] = ''
+    
+    ach_group = f.create_group('Acetylcholine')
+    gaba_group = f.create_group('GABA')
+    glut_group = f.create_group('Glutamate')
+
+    for i, idx in enumerate(ach_cubes_meta.index):
+        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
+        cube_meta = ach_cubes_meta.loc[idx]
+
+        ds = ach_group.create_dataset(key, data=np.asarray(cubes[idx]))
+        ds.attrs['connector_id'] = cube_meta.connector_id
+        ds.attrs['node_id'] = cube_meta.node_id
+        ds.attrs['skeleton_id'] = cube_meta.skid
+        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
+        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
+        ds.attrs['neurotransmitter'] = 'Acetylcholine'
+        #ds.attrs['connector_offset_zyx'] = [5.5, 145.5, 145.5]
+
+    print('Finished writing Acetylcholine cubes...')
+
+    for i, idx in enumerate(gaba_cubes_meta.index):
+        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
+        cube_meta = gaba_cubes_meta.loc[idx]
+
+        ds = gaba_group.create_dataset(key, data=np.asarray(cubes[idx]))
+        ds.attrs['connector_id'] = cube_meta.connector_id
+        ds.attrs['node_id'] = cube_meta.node_id
+        ds.attrs['skeleton_id'] = cube_meta.skid
+        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
+        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
+        ds.attrs['neurotransmitter'] = 'GABA'
+
+    print('Finished writing GABA cubes...')
+
+    for i, idx in enumerate(glut_cubes_meta.index):
+        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
+        cube_meta = glut_cubes_meta.loc[idx]
+
+        ds = glut_group.create_dataset(key, data=np.asarray(cubes[idx]))
+        ds.attrs['connector_id'] = cube_meta.connector_id
+        ds.attrs['node_id'] = cube_meta.node_id
+        ds.attrs['skeleton_id'] = cube_meta.skid
+        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
+        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
+        ds.attrs['neurotransmitter'] = 'Glutamate'
+
+    print('Finished writing Glutamate cubes...')
+
+f.close()
+
+print('HDF5 saved.')
+'''
+# to open later
+with h5py.File("data/NT_cubes.hdf5") as f:
+    ds = f["Glutamate/00009"]
+    arr = ds[:]
+
+# plot image stack
+fig = plt.figure()
+for i in range(0,11):
+    plt.subplot(2,6,i+1)
+    plt.imshow(arr[i],cmap='gray')
+    plt.axis('off')
+fig.tight_layout(pad=0.5)
+plt.show()
+
+'''
+
 
 '''
 # plot particular cube to double-check everything worked properly
@@ -137,69 +219,6 @@ for i in unknown_presyn.index:
 
     cubes_unknown.append(sliced)
 '''
-# format data and save as hdf5
-
-ach_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='cholinergic']
-gaba_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='GABAergic']
-glut_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='glutamatergic']
-
-with h5py.File('data/NT_cubes.hdf5', 'a') as f:
-    f.attrs['date'] = '2022-10-20'
-    f.attrs['readme'] = ''
-    
-    ach_group = f.create_group('Acetylcholine')
-    gaba_group = f.create_group('GABA')
-    glut_group = f.create_group('Glutamate')
-
-    for i, idx in enumerate(ach_cubes_meta.index):
-        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = ach_cubes_meta.loc[idx]
-
-        ds = ach_group.create_dataset(key, data=np.asarray(cubes[idx]))
-        ds.attrs['connector_id'] = cube_meta.connector_id
-        ds.attrs['node_id'] = cube_meta.node_id
-        ds.attrs['skeleton_id'] = cube_meta.skid
-        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
-        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        ds.attrs['neurotransmitter'] = 'Acetylcholine'
-        #ds.attrs['connector_offset_zyx'] = [5.5, 145.5, 145.5]
-
-    print('Finished writing Acetylcholine cubes...')
-
-    for i, idx in enumerate(gaba_cubes_meta.index):
-        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = gaba_cubes_meta.loc[idx]
-
-        ds = gaba_group.create_dataset(key, data=np.asarray(cubes[idx]))
-        ds.attrs['connector_id'] = cube_meta.connector_id
-        ds.attrs['node_id'] = cube_meta.node_id
-        ds.attrs['skeleton_id'] = cube_meta.skid
-        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
-        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        ds.attrs['neurotransmitter'] = 'GABA'
-
-    print('Finished writing GABA cubes...')
-
-    for i, idx in enumerate(glut_cubes_meta.index):
-        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = glut_cubes_meta.loc[idx]
-
-        ds = gaba_group.create_dataset(key, data=np.asarray(cubes[idx]))
-        ds.attrs['connector_id'] = cube_meta.connector_id
-        ds.attrs['node_id'] = cube_meta.node_id
-        ds.attrs['skeleton_id'] = cube_meta.skid
-        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
-        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        ds.attrs['neurotransmitter'] = 'Glutamate'
-
-    print('Finished writing Glutamate cubes...')
-
-print('HDF5 saved.')
-
-# to open later
-#with h5py.File("my.hdf5") as f:
-#    ds = f["gaba/00001"]
-#    arr = ds[:]
 
 '''
 # %%
