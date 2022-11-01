@@ -7,6 +7,10 @@ import matplotlib.pyplot as plt
 import h5py
 import zarr
 import dask.array
+import sys
+# import os
+# path = os.getenv('some_setup')
+# sys.path.append(path)
 
 from pymaid_creds import url, name, password, token
 from data_settings import pairs_path, data_date
@@ -100,7 +104,8 @@ ach_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='cholinergic'
 gaba_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='GABAergic']
 glut_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='glutamatergic']
 
-with h5py.File('data/NT_cubes.hdf5', 'a') as f:
+path = sys.argv[1]
+with h5py.File(path, 'a') as f:
 
     print('started saving .hdf5 training data...')
     f.attrs['date'] = '2022-10-20'
