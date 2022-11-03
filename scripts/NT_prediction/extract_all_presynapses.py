@@ -1,3 +1,4 @@
+# %%
 import pymaid
 import numpy as np
 import pandas as pd
@@ -5,7 +6,9 @@ import matplotlib.pyplot as plt
 import h5py
 import zarr
 import dask.array
-import sys
+from datetime import datetime
+
+# import sys
 # import os
 # path = os.getenv('some_setup')
 # sys.path.append(path)
@@ -18,7 +21,7 @@ brain_neurons = pymaid.get_skids_by_annotation('mw brain neurons') + pymaid.get_
 input_neurons = [pymaid.get_skids_by_annotation(x) for x in pymaid.get_annotated('mw brain inputs').name]
 input_neurons = [x for sublist in input_neurons for x in sublist]
 skids = brain_neurons + input_neurons
-
+# %%
 #####
 # identify locations of all presynaptic sites of each NT type
 
@@ -72,73 +75,38 @@ for i in presyn.index:
     # add one to cube_j so offset is equal on both sides
     sliced = d_arr[cube_i[2]:cube_j[2]+1, cube_i[1]:cube_j[1]+1, cube_i[0]:cube_j[0]+1]
 
-    meta_data = [world_coord, voxel_coord, node.connector_id, node.node_id, node.neuron, node.neurotransmitter]
+    meta_data = [world_coord, voxel_coord, node.connector_id, node.node_id, node.neuron]
     cubes_meta_data.append(meta_data)
     cubes.append(sliced)
 
-cubes_meta_data = pd.DataFrame(data=cubes_meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid', 'neurotransmitter'])
+cubes_meta_data = pd.DataFrame(data=cubes_meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid'])
 
 print('550nm cubes pulled...')
 
 # format data and save as hdf5
 
-ach_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='cholinergic']
-gaba_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='GABAergic']
-glut_cubes_meta = cubes_meta_data[cubes_meta_data.neurotransmitter=='glutamatergic']
-
 path = sys.argv[1]
 with h5py.File(path, 'a') as f:
 
     print('started saving .hdf5 training data...')
-    f.attrs['date'] = '2022-10-20'
+    f.attrs['date'] = datetime.today().strftime('%Y-%m-%d')
     f.attrs['readme'] = ''
     
-    ach_group = f.create_group('Acetylcholine')
-    gaba_group = f.create_group('GABA')
-    glut_group = f.create_group('Glutamate')
+    presyn_group = f.create_group('brain_presynaptic_sites')
 
-    for i, idx in enumerate(ach_cubes_meta.index):
+    for i, idx in enumerate(tqdm(cubes_meta_data.index)):
         key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = ach_cubes_meta.loc[idx]
+        cube_meta = cubes_meta_data.loc[idx]
 
-        ds = ach_group.create_dataset(key, data=np.asarray(cubes[idx]))
+        ds = presyn_group.create_dataset(key, data=np.asarray(cubes[idx]))
         ds.attrs['connector_id'] = cube_meta.connector_id
         ds.attrs['node_id'] = cube_meta.node_id
         ds.attrs['skeleton_id'] = cube_meta.skid
         ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
         ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        ds.attrs['neurotransmitter'] = 'Acetylcholine'
         #ds.attrs['connector_offset_zyx'] = [5.5, 145.5, 145.5]
 
-    print('Finished writing Acetylcholine cubes...')
-
-    for i, idx in enumerate(gaba_cubes_meta.index):
-        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = gaba_cubes_meta.loc[idx]
-
-        ds = gaba_group.create_dataset(key, data=np.asarray(cubes[idx]))
-        ds.attrs['connector_id'] = cube_meta.connector_id
-        ds.attrs['node_id'] = cube_meta.node_id
-        ds.attrs['skeleton_id'] = cube_meta.skid
-        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
-        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        ds.attrs['neurotransmitter'] = 'GABA'
-
-    print('Finished writing GABA cubes...')
-
-    for i, idx in enumerate(glut_cubes_meta.index):
-        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = glut_cubes_meta.loc[idx]
-
-        ds = glut_group.create_dataset(key, data=np.asarray(cubes[idx]))
-        ds.attrs['connector_id'] = cube_meta.connector_id
-        ds.attrs['node_id'] = cube_meta.node_id
-        ds.attrs['skeleton_id'] = cube_meta.skid
-        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
-        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        ds.attrs['neurotransmitter'] = 'Glutamate'
-
-    print('Finished writing Glutamate cubes...')
+    print('Finished writing cubes...')
 
 f.close()
 
