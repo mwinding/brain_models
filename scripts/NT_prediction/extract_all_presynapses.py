@@ -7,8 +7,9 @@ import zarr
 import dask.array
 from datetime import datetime
 from tqdm import tqdm
+import sys
+from joblib import Parallel, delayed
 
-# import sys
 # import os
 # path = os.getenv('some_setup')
 # sys.path.append(path)
@@ -54,7 +55,7 @@ resolution_nm = np.array([3.8, 3.8, 50])
 
 cubes_meta_data = []
 cubes = []
-for i in presyn.index:
+for i in tqdm(presyn.index):
     node = presyn.loc[i]
 
     #get world coordinates
@@ -76,35 +77,45 @@ for i in presyn.index:
     cubes_meta_data.append(meta_data)
     cubes.append(sliced)
 
-cubes_meta_data = pd.DataFrame(data=cubes_meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid'])
-
 print('550nm cubes pulled...')
 
 # format data and save as hdf5
+def save_intermediate_hdf5(path, cubes, cubes_meta_data, i):
+    with h5py.File(path.replace('.hdf5', f'_intermediate-{i}.hdf5'), 'a') as f:
+
+        print('started saving .hdf5 training data...')
+        f.attrs['date'] = datetime.today().strftime('%Y-%m-%d')
+        f.attrs['readme'] = ''
+
+        presyn_group = f.create_group('brain_presynaptic_sites')
+
+        for i, idx in enumerate(tqdm(cubes_meta_data.index)):
+            key = str(i).zfill(6) # fill to 6 digits (because in this case, no NT type has >999,999 examples)
+            cube_meta = cubes_meta_data.loc[idx]
+
+            ds = presyn_group.create_dataset(key, data=np.asarray(cubes[idx]))
+            ds.attrs['connector_id'] = cube_meta.connector_id
+            ds.attrs['node_id'] = cube_meta.node_id
+            ds.attrs['skeleton_id'] = cube_meta.skid
+            ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
+            ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
+            #ds.attrs['connector_offset_zyx'] = [5.5, 145.5, 145.5]
+
+    f.close()
+    print('intermediate HDF5 saved.')
+
+batch_size = 10000
+
+def divide_chunks(l, n):
+    for i in range(0, len(l), n):
+        yield l[i:i + n]
+
+cubes_batches = divide_chunks(cubes, batch_size)
+cubes_meta_batches = divide_chunks(cubes_meta_data, batch_size)
+cubes_meta_batches = [pd.DataFrame(data=meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid']) for meta_data in cubes_meta_batches]
+
+print(f'Cubes divided into {len(cubes_batches)} batches')
 
 path = sys.argv[1]
-with h5py.File(path, 'a') as f:
+job = Parallel(n_jobs=-1)(delayed(save_intermediate_hdf5)(path, cubes_batches[i], cubes_meta_batches[i], i) for i in tqdm(range(0, len(cubes_batches))))
 
-    print('started saving .hdf5 training data...')
-    f.attrs['date'] = datetime.today().strftime('%Y-%m-%d')
-    f.attrs['readme'] = ''
-    
-    presyn_group = f.create_group('brain_presynaptic_sites')
-
-    for i, idx in enumerate(tqdm(cubes_meta_data.index)):
-        key = str(i).zfill(5) # fill to 5 digits (because in this case, no NT type has >99,999 examples)
-        cube_meta = cubes_meta_data.loc[idx]
-
-        ds = presyn_group.create_dataset(key, data=np.asarray(cubes[idx]))
-        ds.attrs['connector_id'] = cube_meta.connector_id
-        ds.attrs['node_id'] = cube_meta.node_id
-        ds.attrs['skeleton_id'] = cube_meta.skid
-        ds.attrs['connector_voxels_zyx'] = np.array(cube_meta.voxel_coord)
-        ds.attrs['connector_project_zyx'] = np.array(cube_meta.world_coord)
-        #ds.attrs['connector_offset_zyx'] = [5.5, 145.5, 145.5]
-
-    print('Finished writing cubes...')
-
-f.close()
-
-print('HDF5 saved.')
