@@ -1,4 +1,3 @@
-# %%
 import pymaid
 import numpy as np
 import pandas as pd
@@ -7,6 +6,7 @@ import h5py
 import zarr
 import dask.array
 from datetime import datetime
+from tqdm import tqdm
 
 # import sys
 # import os
@@ -21,8 +21,7 @@ brain_neurons = pymaid.get_skids_by_annotation('mw brain neurons') + pymaid.get_
 input_neurons = [pymaid.get_skids_by_annotation(x) for x in pymaid.get_annotated('mw brain inputs').name]
 input_neurons = [x for sublist in input_neurons for x in sublist]
 skids = brain_neurons + input_neurons
-# %%
-#####
+
 # identify locations of all presynaptic sites of each NT type
 
 # load neuron morphologies
@@ -46,8 +45,6 @@ arr = container['volumes/raw/c0/s0']
 d_arr = dask.array.from_zarr(arr)
 
 print('Seymour .n5 loaded...')
-
-## continue here on Thursday
 
 ######
 # pull all cubes around presynaptic sites associated with known NTs
