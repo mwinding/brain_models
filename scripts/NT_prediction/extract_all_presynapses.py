@@ -104,18 +104,17 @@ def save_intermediate_hdf5(path, cubes, cubes_meta_data, i):
     f.close()
     print('intermediate HDF5 saved.')
 
-batch_size = 10000
+batch_size = 1000
 
 def divide_chunks(l, n):
     for i in range(0, len(l), n):
         yield l[i:i + n]
 
-cubes_batches = divide_chunks(cubes, batch_size)
-cubes_meta_batches = divide_chunks(cubes_meta_data, batch_size)
+cubes_batches = list(divide_chunks(cubes, batch_size))
+cubes_meta_batches = list(divide_chunks(cubes_meta_data, batch_size))
 cubes_meta_batches = [pd.DataFrame(data=meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid']) for meta_data in cubes_meta_batches]
 
 print(f'Cubes divided into {len(cubes_batches)} batches')
 
 path = sys.argv[1]
-job = Parallel(n_jobs=-1)(delayed(save_intermediate_hdf5)(path, cubes_batches[i], cubes_meta_batches[i], i) for i in tqdm(range(0, len(cubes_batches))))
-
+job = Parallel(n_jobs=-2)(delayed(save_intermediate_hdf5)(path, cubes_batches[i], cubes_meta_batches[i], i) for i in tqdm(range(0, len(cubes_batches))))
