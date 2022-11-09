@@ -126,7 +126,7 @@ job = Parallel(n_jobs=-2)(delayed(save_intermediate_hdf5)(path, cubes_batches[i]
 t2 = datetime.now()
 
 elapsed = t2-t1
-elapsed = f'{elapsed.total_seconds()//60} min, {elapsed.total_seconds()//1} sec'
+elapsed = f'{elapsed.total_seconds()//60} min, {(elapsed.total_seconds()%60)//1} sec'
 
 print('Finished writing intermediate HDF5s...')
 print(f'Save location: {path}')

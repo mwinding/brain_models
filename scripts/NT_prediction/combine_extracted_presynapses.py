@@ -53,7 +53,7 @@ with h5py.File(dest_path, 'w') as dest_hdf5:
 t2 = datetime.now()
 
 elapsed = t2-t1
-elapsed = f'{elapsed.total_seconds()//60} min, {elapsed.total_seconds()//1} sec'
+elapsed = f'{elapsed.total_seconds()//60} min, {(elapsed.total_seconds()%60)//1} sec'
 
 print('\nFinished writing combined HDF5...')
 print(f'Save location: {dest_path}')
