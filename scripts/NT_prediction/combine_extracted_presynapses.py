@@ -23,7 +23,7 @@ print("Save path is: " + dest_path)
 confirm = input('Do you want to continue? [y(es) or no]')
 
 # keep asking if invalid answers are given
-while ((confirm not in ['yes', 'y', 'Yes', 'Y']) & (confirm!='no')):
+while ((confirm not in ['yes', 'y', 'Yes', 'Y']) | (confirm!='no')):
     print('Answer invalid!')
     confirm = input('Do you want to continue? [y(es) or no]')
 
