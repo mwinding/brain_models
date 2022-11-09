@@ -116,5 +116,20 @@ cubes_meta_batches = [pd.DataFrame(data=meta_data, columns=['world_coord', 'voxe
 
 print(f'Cubes divided into {len(cubes_batches)} batches')
 
-path = sys.argv[1]
+path = input("Enter save path for intermediate HDF5s:")
+print("Path is: " + path)
+
+# collect timepoint one for total time elapsed
+t1 = datetime.now()
+
 job = Parallel(n_jobs=-2)(delayed(save_intermediate_hdf5)(path, cubes_batches[i], cubes_meta_batches[i], i) for i in tqdm(range(0, len(cubes_batches))))
+
+# collect timepoint two for total time elapsed
+t2 = datetime.now()
+
+elapsed = t2-t1
+elapsed = f'{elapsed.total_seconds()//60} min, {elapsed.total_seconds()//1} sec'
+
+print('Finished writing intermediate HDF5s...')
+print(f'Save location: {path}')
+print(f'Time elapsed: ' + elapsed)
