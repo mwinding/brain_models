@@ -92,8 +92,8 @@ def save_intermediate_hdf5(path, cubes, cubes_meta_data, i):
         presyn_group = f.create_group('brain_presynaptic_sites')
 
         for idx in cubes_meta_data.index:
-            key = str(cube_meta.connector_id) # use connector_id for key
             cube_meta = cubes_meta_data.loc[idx]
+            key = str(cube_meta.connector_id) # use connector_id for key
 
             ds = presyn_group.create_dataset(key, data=np.asarray(cubes[idx]))
             ds.attrs['connector_id'] = cube_meta.connector_id
