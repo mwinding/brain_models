@@ -91,8 +91,8 @@ def save_intermediate_hdf5(path, cubes, cubes_meta_data, i):
 
         presyn_group = f.create_group('brain_presynaptic_sites')
 
-        for i, idx in enumerate(cubes_meta_data.index):
-            key = str(idx).zfill(6) # fill to 6 digits (because in this case, no NT type has >999,999 examples)
+        for idx in cubes_meta_data.index:
+            key = str(cube_meta.connector_id) # use connector_id for key
             cube_meta = cubes_meta_data.loc[idx]
 
             ds = presyn_group.create_dataset(key, data=np.asarray(cubes[idx]))
