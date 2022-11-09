@@ -17,6 +17,9 @@ from joblib import Parallel, delayed
 from pymaid_creds import url, name, password, token
 rm = pymaid.CatmaidInstance(url, token, name, password)
 
+path = input("Enter save path for intermediate HDF5s:")
+print("\nPath is: " + path)
+
 # neurons of interest
 brain_neurons = pymaid.get_skids_by_annotation('mw brain neurons') + pymaid.get_skids_by_annotation('mw brain accessory neurons')
 input_neurons = [pymaid.get_skids_by_annotation(x) for x in pymaid.get_annotated('mw brain inputs').name]
@@ -113,9 +116,6 @@ cubes_meta_batches = list(divide_chunks(cubes_meta_data, batch_size))
 cubes_meta_batches = [pd.DataFrame(data=meta_data, columns=['world_coord', 'voxel_coord', 'connector_id', 'node_id', 'skid']) for meta_data in cubes_meta_batches]
 
 print(f'Cubes divided into {len(cubes_batches)} batches')
-
-path = input("Enter save path for intermediate HDF5s:")
-print("Path is: " + path)
 
 # collect timepoint one for total time elapsed
 t1 = datetime.now()
