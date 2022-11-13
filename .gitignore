@@ -2,4 +2,5 @@ data_settings.py
 pymaid_creds.py
 .ipynb_checkpoints
 data
+plots
 .DS_Store
