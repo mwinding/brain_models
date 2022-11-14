@@ -37,6 +37,12 @@ with h5py.File(path) as f:
             data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
             data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])
 
+            if(group=='Glutamate'): # make classes a bit more balanced
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-2]])
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+2]])            
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-3]])
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+3]])
+
 train_data = pd.DataFrame(data, columns=['label', 'connector_id', 'array'])
 
 # collect timepoint two for total time elapsed
@@ -94,21 +100,41 @@ input_shape = X_train[0].shape
 model = tf.keras.Sequential([
 
     # base CNN layers
-    layers.Conv2D(filters=64, kernel_size=3, activation='relu', padding='same', input_shape = [input_shape[0], input_shape[1], 1]),
+    layers.Conv2D(filters=32, kernel_size=3, activation='relu', padding='same', input_shape = [input_shape[0], input_shape[1], 1]),
+    layers.BatchNormalization(),
+    layers.Conv2D(filters=32, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
     layers.MaxPool2D(pool_size=(2, 2)),
     layers.Dropout(0.2),
 
     layers.Conv2D(filters=64, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
-    layers.MaxPool2D(pool_size=(2, 2)),
-    layers.Dropout(0.2),
-
     layers.Conv2D(filters=64, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
     layers.MaxPool2D(pool_size=(2, 2)),
     layers.Dropout(0.2),
 
+    layers.Conv2D(filters=128, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
+    layers.Conv2D(filters=128, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
+    layers.MaxPool2D(pool_size=(2, 2)),
+    layers.Dropout(0.2),
+
+    layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
+    layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
+    layers.MaxPool2D(pool_size=(2, 2)),
+    layers.Dropout(0.2),
+
+    layers.Conv2D(filters=512, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
+    layers.Conv2D(filters=512, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
+    layers.MaxPool2D(pool_size=(2, 2)),
+    layers.Dropout(0.2),
+    
     # head neural net layers
     layers.Flatten(),
     layers.Dense(256, activation='relu'),
@@ -149,13 +175,22 @@ history = model.fit(
 
 # %%
 # plot loss and accuracy
+
+# add model type here
+model_type = '10CNNs-increasingFilters_32_64_128_256_512'
+
 history_df = pd.DataFrame(history.history)
 
+date = datetime.now().strftime('%Y-%m-%d')
 history_df.loc[0:, ['loss', 'val_loss']].plot()
+plt.savefig(f'plots/{date}_{model_type}_train-validation_loss.png', format='png')
 print("Minimum validation loss: {}".format(history_df['val_loss'].min()))
 
 history_df.loc[0:, ['accuracy', 'val_accuracy']].plot()
+plt.savefig(f'plots/{date}_{model_type}_train-validation_accuracy.png', format='png')
 print("Minimum validation loss: {}".format(history_df['val_accuracy'].max()))
+
+history_df.to_csv(f'plots/history-df_{date}_{model_type}.csv')
 
 '''
 # make predictions with model
@@ -172,3 +207,4 @@ for i in predictions.index:
 predictions = pd.DataFrame(predictions.index+1, columns=['ImageId'])
 predictions['Label'] = labels
 '''
+# %%
