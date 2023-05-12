@@ -34,14 +34,11 @@ with h5py.File(path) as f:
 
             # include middle z-slice and +1 / -1 z-slices as separate 2D images for training
             data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index]])
-            data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
-            data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])
 
             if(group=='Glutamate'): # make classes a bit more balanced
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-2]])
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+2]])            
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-3]])
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+3]])
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])            
+
 
 train_data = pd.DataFrame(data, columns=['label', 'connector_id', 'array'])
 
@@ -66,13 +63,6 @@ X = train_data.drop(['label', 'connector_id'], axis=1).array.values
 X = [tf.constant(image) for image in X]
 
 y = train_data.loc[:, 'label']
-
-'''
-# convert test data to 28x28 Tensors
-X_test = test_data.to_numpy()
-X_test = X_test.reshape(len(X_test[:, 0]), 28, 28)
-#X_test = [tf.constant(image) for image in X_test]
-'''
 
 # plot a few examples
 
