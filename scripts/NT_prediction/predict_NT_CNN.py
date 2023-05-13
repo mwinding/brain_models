@@ -92,13 +92,6 @@ model = tf.keras.Sequential([
     # base CNN layers
     layers.Conv2D(filters=32, kernel_size=3, activation='relu', padding='same', input_shape = [input_shape[0], input_shape[1], 1]),
     layers.BatchNormalization(),
-    layers.Conv2D(filters=32, kernel_size=3, activation='relu', padding='same'),
-    layers.BatchNormalization(),
-    layers.MaxPool2D(pool_size=(2, 2)),
-    layers.Dropout(0.2),
-
-    layers.Conv2D(filters=64, kernel_size=3, activation='relu', padding='same'),
-    layers.BatchNormalization(),
     layers.Conv2D(filters=64, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
     layers.MaxPool2D(pool_size=(2, 2)),
@@ -115,9 +108,13 @@ model = tf.keras.Sequential([
     layers.BatchNormalization(),
     layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
+   layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
     layers.MaxPool2D(pool_size=(2, 2)),
     layers.Dropout(0.2),
 
+    layers.Conv2D(filters=512, kernel_size=3, activation='relu', padding='same'),
+    layers.BatchNormalization(),
     layers.Conv2D(filters=512, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
     layers.Conv2D(filters=512, kernel_size=3, activation='relu', padding='same'),
@@ -127,11 +124,9 @@ model = tf.keras.Sequential([
     
     # head neural net layers
     layers.Flatten(),
-    layers.Dense(256, activation='relu'),
+    layers.Dense(4096, activation='relu'),
     layers.Dropout(0.35),
-    layers.Dense(256, activation='relu'),
-    layers.Dropout(0.35),
-    layers.Dense(256, activation='relu'),
+    layers.Dense(4096, activation='relu'),
     layers.Dropout(0.35),
     layers.Dense(len(y_train[0]), activation='softmax') # 3 required to classify as Ach, GABA, or Glut
 ])
@@ -145,13 +140,13 @@ model.compile(
 
 # %%
 # fit models
-epochs = 50
+epochs = 1000
 
 # I found that one has to monitor early-stopping
 # if it stops after just a few epochs, the model is not well generalized and performs poorly
 early_stopping = EarlyStopping(
     monitor='val_accuracy',
-    patience=10,
+    patience=100,
     restore_best_weights=True,
     mode='max'
 )
@@ -167,7 +162,7 @@ history = model.fit(
 # plot loss and accuracy
 
 # add model type here
-model_type = '10CNNs-increasingFilters_32_64_128_256_512'
+model_type = 'VGG16-with-dropout_from-scratch'
 
 history_df = pd.DataFrame(history.history)
 
