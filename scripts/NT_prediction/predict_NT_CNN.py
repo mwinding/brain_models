@@ -34,10 +34,12 @@ with h5py.File(path) as f:
 
             # include middle z-slice and +1 / -1 z-slices as separate 2D images for training
             data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index]])
+            data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
+            data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])  
 
             if(group=='Glutamate'): # make classes a bit more balanced
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])            
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-2]])
+                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+2]])            
 
 
 train_data = pd.DataFrame(data, columns=['label', 'connector_id', 'array'])
@@ -108,7 +110,7 @@ model = tf.keras.Sequential([
     layers.BatchNormalization(),
     layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
-   layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
+    layers.Conv2D(filters=256, kernel_size=3, activation='relu', padding='same'),
     layers.BatchNormalization(),
     layers.MaxPool2D(pool_size=(2, 2)),
     layers.Dropout(0.2),

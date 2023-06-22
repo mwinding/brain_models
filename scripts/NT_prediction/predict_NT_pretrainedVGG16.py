@@ -47,10 +47,12 @@ with h5py.File(path) as f:
 
             # include middle z-slice and +1 / -1 z-slices as separate 2D images for training
             data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index]])
+            data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
+            #data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])
 
-            if(group=='Glutamate'): # make classes a bit more balanced
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-1]])
-                data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+1]])            
+            #if(group=='Glutamate'): # make classes a bit more balanced
+            #    data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index-2]])
+            #    data.append([ds.attrs['neurotransmitter'], ds.attrs['connector_id'], arr[middle_index+2]])                  
 
 
 train_data = pd.DataFrame(data, columns=['label', 'connector_id', 'array'])
@@ -115,8 +117,10 @@ def build_pretrained_vgg_model(input_shape):
     model.add(base_model)
 
     model.add(layers.Flatten())
-    model.add(layers.Dense(4096, activation='relu'))
-    model.add(layers.Dense(4096, activation='relu'))
+    model.add(layers.Dense(256, activation='relu'))
+    model.add(layers.Dropout(0.35))
+    model.add(layers.Dense(256, activation='relu'))
+    model.add(layers.Dropout(0.35))
     model.add(layers.Dense(len(y_train[0]), activation='softmax')) # 3 required to classify as Ach, GABA, or Glut
 
     return model
@@ -137,7 +141,7 @@ epochs = 1000
 # if it stops after just a few epochs, the model is not well generalized and performs poorly
 early_stopping = EarlyStopping(
     monitor='val_accuracy',
-    patience=100,
+    patience=50,
     restore_best_weights=True,
     mode='max'
 )
