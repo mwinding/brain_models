@@ -4,3 +4,5 @@ pymaid_creds.py
 data
 plots
 .DS_Store
+.vscode
+__pycache__
