@@ -99,13 +99,23 @@ pickle.dump(all_data_no_NT_df, open(f'data/cascades/all-sensory-modalities_proce
 
 # %%
 import matplotlib.pyplot as plt
+import seaborn as sns
+
+# allows text to be editable in Illustrator
+plt.rcParams['pdf.fonttype'] = 42
+plt.rcParams['ps.fonttype'] = 42
+
+# font settings
+plt.rcParams['font.size'] = 5
+plt.rcParams['font.family'] = 'arial'
+
+modality = 'visual'
+fig, ax = plt.subplots(1,1)
+sns.heatmap(all_data_df.loc[modality, 'skid_hit_hists'].sort_values(by=[0,1,2,3,4,5,6,7,8], ascending=False), ax=ax)
+plt.savefig(f'plots/cascade-mixed_{modality}.png', bbox_inches='tight')
 
 fig, ax = plt.subplots(1,1)
-sns.heatmap(all_data_df.loc['olfactory', 'skid_hit_hists'].sort_values(by=[0,1,2,3,4,5,6,7,8], ascending=False), ax=ax)
-plt.savefig('plots/cascade-mixed_olfactory.png', bbox_inches='tight')
-
-fig, ax = plt.subplots(1,1)
-sns.heatmap(all_data_no_NT_df.loc['olfactory', 'skid_hit_hists'].sort_values(by=[0,1,2,3,4,5,6,7,8], ascending=False))
-plt.savefig('plots/cascade-excitatory_olfactory.png', bbox_inches='tight')
+sns.heatmap(all_data_no_NT_df.loc[modality, 'skid_hit_hists'].sort_values(by=[0,1,2,3,4,5,6,7,8], ascending=False))
+plt.savefig(f'plots/cascade-excitatory_{modality}.png', bbox_inches='tight')
 
 # %%
