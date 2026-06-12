@@ -32,6 +32,10 @@ import navis.interfaces.blender as b3d
 import numpy as np
 import pymaid as pymaid
 
+url = 'https://neurophyla.mrc-lmb.cam.ac.uk/catmaid/drosophila/l1/seymour/'
+token = ''
+name = 'Surname'
+password = ''
 pymaid.CatmaidInstance(url, token, name, password)
 
 h = b3d.Handler()
