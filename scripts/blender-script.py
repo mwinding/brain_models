@@ -1,3 +1,5 @@
+# Example script for CAVE/neuroglancer import to blender
+
 import navis
 import cloudvolume as cv
 
@@ -20,3 +22,20 @@ meshes = vol.mesh.get_navis([648518346365681673])
 
 # Add to the Blender scene
 h.add(meshes)
+
+# Example script for CATMAID import to blender
+
+import pymaid as pymaid
+from pymaid_creds import url, name, password, token
+import navis.interfaces.blender as b3d
+import numpy as np
+import pymaid as pymaid
+
+pymaid.CatmaidInstance(url, token, name, password)
+
+h = b3d.Handler()
+
+skids = pymaid.get_skids_by_annotation('mw MBONs')
+neurons = pymaid.get_neurons(skids)
+h.add(neurons)
+h.neurons.bevel(0.02)
