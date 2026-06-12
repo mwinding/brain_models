@@ -23,6 +23,7 @@ meshes = vol.mesh.get_navis([648518346365681673])
 # Add to the Blender scene
 h.add(meshes)
 
+###########################################
 # Example script for CATMAID import to blender
 
 import pymaid as pymaid
